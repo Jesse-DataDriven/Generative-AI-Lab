@@ -30,8 +30,8 @@ Pipeline completo para gerar imagens a partir de prompts, usando **Stable Diffus
 - Conectar em intranets para fluxos institucionais
 - Criar assistentes visuais para jornadas de CX/CS
 
-### 📁 V1 do projeto
-👉 https://iajesse.netlify.app/
+📁 V1 do projeto  
+👉 [Acessar versão 1](https://iajesse.netlify.app/)
 
 ---
 
