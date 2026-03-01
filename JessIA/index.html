@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>JessIA — Gerador de Imagens</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #080b10;
+      --surface: #0e1219;
+      --border: #1e2535;
+      --accent: #00e5ff;
+      --accent2: #7b61ff;
+      --text: #e8edf5;
+      --muted: #5a6478;
+      --success: #00e5a0;
+      --error: #ff4f6a;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Animated background grid */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      z-index: 0;
+      animation: gridShift 20s linear infinite;
+    }
+
+    @keyframes gridShift {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(40px); }
+    }
+
+    /* Glow orbs */
+    body::after {
+      content: '';
+      position: fixed;
+      top: -200px;
+      left: -200px;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(123,97,255,0.08) 0%, transparent 70%);
+      z-index: 0;
+      animation: orbFloat 12s ease-in-out infinite alternate;
+    }
+
+    @keyframes orbFloat {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(100px, 80px); }
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 60px 24px;
+    }
+
+    /* Header */
+    header {
+      text-align: center;
+      margin-bottom: 64px;
+      animation: fadeDown 0.8s ease both;
+    }
+
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .logo-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(0,229,255,0.07);
+      border: 1px solid rgba(0,229,255,0.2);
+      border-radius: 100px;
+      padding: 6px 16px;
+      font-size: 11px;
+      letter-spacing: 0.15em;
+      color: var(--accent);
+      text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+
+    .logo-badge::before {
+      content: '';
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 8px var(--accent);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2.5rem, 6vw, 4rem);
+      font-weight: 800;
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #e8edf5 0%, var(--accent) 50%, var(--accent2) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 16px;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 14px;
+      letter-spacing: 0.05em;
+    }
+
+    /* Main card */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 40px;
+      animation: fadeUp 0.8s 0.2s ease both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .section-label {
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    /* Prompt input */
+    .prompt-wrapper {
+      position: relative;
+      margin-bottom: 24px;
+    }
+
+    textarea {
+      width: 100%;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 14px;
+      resize: none;
+      outline: none;
+      transition: border-color 0.3s, box-shadow 0.3s;
+      line-height: 1.6;
+    }
+
+    textarea::placeholder { color: var(--muted); }
+
+    textarea:focus {
+      border-color: rgba(0,229,255,0.4);
+      box-shadow: 0 0 0 3px rgba(0,229,255,0.06);
+    }
+
+    /* Negative prompt */
+    .negative-wrapper {
+      margin-bottom: 32px;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 16px;
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.3s;
+    }
+
+    input[type="text"]::placeholder { color: var(--muted); }
+    input[type="text"]:focus { border-color: rgba(255,79,106,0.4); }
+
+    /* Settings row */
+    .settings-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    @media (max-width: 600px) {
+      .settings-row { grid-template-columns: 1fr; }
+      .card { padding: 24px; }
+    }
+
+    .setting-group label {
+      display: block;
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .setting-group select,
+    .setting-group input[type="range"] {
+      width: 100%;
+    }
+
+    select {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      outline: none;
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%235a6478' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 32px;
+    }
+
+    select option { background: #0e1219; }
+
+    /* Range slider */
+    .range-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    input[type="range"] {
+      flex: 1;
+      -webkit-appearance: none;
+      height: 4px;
+      border-radius: 2px;
+      background: var(--border);
+      outline: none;
+      cursor: pointer;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 8px rgba(0,229,255,0.5);
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.3);
+    }
+
+    .range-value {
+      font-size: 12px;
+      color: var(--accent);
+      min-width: 28px;
+      text-align: right;
+    }
+
+    /* Generate button */
+    .btn-generate {
+      width: 100%;
+      padding: 18px;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+      border: none;
+      border-radius: 12px;
+      color: #080b10;
+      font-family: 'Syne', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: opacity 0.3s, transform 0.2s, box-shadow 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-generate::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 60%);
+    }
+
+    .btn-generate:hover {
+      opacity: 0.92;
+      transform: translateY(-1px);
+      box-shadow: 0 8px 32px rgba(0,229,255,0.25), 0 4px 16px rgba(123,97,255,0.2);
+    }
+
+    .btn-generate:active { transform: translateY(0); }
+
+    .btn-generate:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Loading state */
+    .loading-bar {
+      display: none;
+      height: 3px;
+      background: var(--border);
+      border-radius: 2px;
+      margin-top: 16px;
+      overflow: hidden;
+    }
+
+    .loading-bar.active { display: block; }
+
+    .loading-bar::after {
+      content: '';
+      display: block;
+      height: 100%;
+      width: 40%;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      border-radius: 2px;
+      animation: loadingSlide 1.5s ease-in-out infinite;
+    }
+
+    @keyframes loadingSlide {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(350%); }
+    }
+
+    .status-text {
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 12px;
+      min-height: 18px;
+      letter-spacing: 0.05em;
+    }
+
+    /* Result area */
+    .result-area {
+      margin-top: 40px;
+      display: none;
+      animation: fadeUp 0.5s ease both;
+    }
+
+    .result-area.visible { display: block; }
+
+    .result-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .result-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--success);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .result-title::before {
+      content: '';
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 8px var(--success);
+    }
+
+    .btn-download {
+      background: rgba(0,229,160,0.1);
+      border: 1px solid rgba(0,229,160,0.3);
+      border-radius: 8px;
+      padding: 8px 16px;
+      color: var(--success);
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-download:hover { background: rgba(0,229,160,0.2); }
+
+    .result-image {
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      display: block;
+    }
+
+    /* Error */
+    .error-box {
+      display: none;
+      background: rgba(255,79,106,0.08);
+      border: 1px solid rgba(255,79,106,0.3);
+      border-radius: 10px;
+      padding: 14px 18px;
+      color: var(--error);
+      font-size: 13px;
+      margin-top: 16px;
+    }
+
+    .error-box.visible { display: block; }
+
+    footer {
+      text-align: center;
+      margin-top: 48px;
+      color: var(--muted);
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      opacity: 0.5;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo-badge">Stable Diffusion — Powered</div>
+      <h1>JessIA</h1>
+      <p class="subtitle">// descreva qualquer imagem. a IA cria.</p>
+    </header>
+
+    <div class="card">
+      </div>
+
+      <!-- Prompt -->
+      <div class="prompt-wrapper">
+        <p class="section-label">Prompt — descreva sua imagem</p>
+        <textarea id="prompt" rows="4"
+          placeholder="ex: um astronauta cavalgando um cavalo em Marte, arte digital hiperrealista, iluminação dramática, 8k..."></textarea>
+      </div>
+
+      <!-- Negative Prompt oculto -->
+      <input type="hidden" id="negativePrompt"
+        value="ugly, deformed, noisy, blurry, distorted, out of focus, bad anatomy, extra limbs, poorly drawn face, poorly drawn hands, missing fingers" />
+
+      <!-- Settings -->
+      <div class="settings-row">
+        <div class="setting-group">
+          <label>Resolução</label>
+          <select id="resolution">
+            <option value="512x512">512 × 512</option>
+            <option value="768x512">768 × 512</option>
+            <option value="512x768">512 × 768</option>
+            <option value="768x768">768 × 768</option>
+          </select>
+        </div>
+
+        <div class="setting-group">
+          <label>Steps <span id="stepsVal" style="color:var(--accent)">30</span></label>
+          <div class="range-wrapper">
+            <input type="range" id="steps" min="10" max="50" value="30"
+              oninput="document.getElementById('stepsVal').textContent=this.value" />
+          </div>
+        </div>
+
+        <div class="setting-group">
+          <label>Guidance <span id="guidanceVal" style="color:var(--accent)">7.5</span></label>
+          <div class="range-wrapper">
+            <input type="range" id="guidance" min="1" max="15" step="0.5" value="7.5"
+              oninput="document.getElementById('guidanceVal').textContent=this.value" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Button -->
+      <button class="btn-generate" id="generateBtn" onclick="generate()">
+        ✦ Gerar Imagem
+      </button>
+
+      <div class="loading-bar" id="loadingBar"></div>
+      <p class="status-text" id="statusText"></p>
+      <div class="error-box" id="errorBox"></div>
+
+      <!-- Result -->
+      <div class="result-area" id="resultArea">
+        <div class="result-header">
+          <span class="result-title">Imagem gerada</span>
+          <button class="btn-download" onclick="downloadImage()">↓ Download</button>
+        </div>
+        <img class="result-image" id="resultImage" src="" alt="Imagem gerada" />
+      </div>
+    </div>
+
+    <footer>jessia &mdash; stable diffusion interface &mdash; 2025</footer>
+  </div>
+
+  <script>
+    // ── Atualização de point end (muda o link quando rodo o Colab) ──
+    const API_BASE = 'https://deny-gras-jokes-nano.trycloudflare.com';
+
+    // ── Translation ─────────────────────────────────────────
+    async function translateToEnglish(text) {
+      try {
+        const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=pt&tl=en&dt=t&q=${encodeURIComponent(text)}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        return data[0].map(d => d[0]).join('');
+      } catch {
+        return text; // fallback: use original
+      }
+    }
+
+    // ── Generate ─────────────────────────────────────────────
+    async function generate() {
+      const promptRaw = document.getElementById('prompt').value.trim();
+      const negativePrompt = document.getElementById('negativePrompt').value.trim();
+      const [width, height] = document.getElementById('resolution').value.split('x').map(Number);
+      const steps = parseInt(document.getElementById('steps').value);
+      const guidance = parseFloat(document.getElementById('guidance').value);
+
+      if (!promptRaw) { showError('Digite um prompt para gerar a imagem.'); return; }
+
+      setLoading(true, '// traduzindo prompt...');
+      clearError();
+      hideResult();
+
+      const prefix = 'masterpiece, best quality, highly detailed, sharp focus, ';
+      const promptEn = prefix + await translateToEnglish(promptRaw);
+      setStatus(`// prompt traduzido → "${promptEn.slice(0, 60)}..."`);
+
+      await new Promise(r => setTimeout(r, 600));
+      setStatus('// enviando para o modelo...');
+
+      try {
+        const res = await fetch(`${API_BASE}/generate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt: promptEn, negative_prompt: negativePrompt,
+                                  width, height, num_inference_steps: steps,
+                                  guidance_scale: guidance })
+        });
+
+        if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);
+        const data = await res.json();
+
+        if (!data.image) throw new Error('Resposta inválida do servidor.');
+
+        document.getElementById('resultImage').src = `data:image/png;base64,${data.image}`;
+        showResult();
+        setStatus('// imagem gerada com sucesso ✓');
+      } catch (err) {
+        showError(`Erro ao gerar imagem: ${err.message}`);
+        setStatus('');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    // ── Helpers ──────────────────────────────────────────────
+    function setLoading(active, msg = '') {
+      document.getElementById('generateBtn').disabled = active;
+      document.getElementById('generateBtn').textContent = active ? '⏳ Gerando...' : '✦ Gerar Imagem';
+      document.getElementById('loadingBar').classList.toggle('active', active);
+      if (msg) setStatus(msg);
+    }
+
+    function setStatus(msg) {
+      document.getElementById('statusText').textContent = msg;
+    }
+
+    function showError(msg) {
+      const el = document.getElementById('errorBox');
+      el.textContent = '⚠ ' + msg;
+      el.classList.add('visible');
+    }
+
+    function clearError() {
+      document.getElementById('errorBox').classList.remove('visible');
+    }
+
+    function showResult() {
+      document.getElementById('resultArea').classList.add('visible');
+    }
+
+    function hideResult() {
+      document.getElementById('resultArea').classList.remove('visible');
+    }
+
+    function downloadImage() {
+      const img = document.getElementById('resultImage');
+      const a = document.createElement('a');
+      a.href = img.src;
+      a.download = `imageai_${Date.now()}.png`;
+      a.click();
+    }
+
+    // Enter to generate
+    document.getElementById('prompt').addEventListener('keydown', e => {
+      if (e.key === 'Enter' && e.ctrlKey) generate();
+    });
+  </script>
+</body>
+</html>
