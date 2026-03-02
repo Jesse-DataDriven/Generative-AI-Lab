@@ -521,8 +521,6 @@
   </div>
 
   <script>
-    // ── Atualização de point end (muda o link quando rodo o Colab) ──
-    const API_BASE = 'https://pets-meditation-titanium-brief.trycloudflare.com';
 
     // ── Translation ─────────────────────────────────────────
     async function translateToEnglish(text) {
@@ -558,7 +556,7 @@
       setStatus('// enviando para o modelo...');
 
       try {
-        const res = await fetch(`${API_BASE}/generate`, {
+        const res = await fetch(`https://iajesse.netlify.app/api/generate`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ prompt: promptEn, negative_prompt: negativePrompt,
