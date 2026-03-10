@@ -7,7 +7,7 @@ A Documentação de Discovery Padrão consolida o processo utilizado para estrut
 ## 🔗 Acesso à Documentação Completa
 
 👉 **Clique aqui para ver a documentação na íntegra:**  
-https://jesseombd.atlassian.net/wiki/x/aoAB
+https://jesseombd.atlassian.net/wiki/external/ZmVjYWY5ZTM2MzI0NGJkYzhlNTM5MDZjNzdmYjcyNjg
 
 ---
 
